@@ -112,6 +112,14 @@ static inline void PpuWidescreenAdjustPinnedWindowEdges(
     int *w2r) {
   if (screen_left == 0 && screen_right == kPpuXPixels)
     return;
+  /* A one-pixel window at an edge ([0,0] or [255,255]) is how games park a
+   * window they are not using: overscan hides that column on a TV. Widened,
+   * it would either fill a margin or show as a stripe mid-picture, so it is
+   * dropped (left > right is an empty window). */
+  bool park1 = *w1l == *w1r && (*w1l == 0 || *w1l == kPpuXPixels - 1);
+  bool park2 = *w2l == *w2r && (*w2l == 0 || *w2l == kPpuXPixels - 1);
+  if (park1) { *w1l = 1; *w1r = 0; }
+  if (park2) { *w2l = 1; *w2r = 0; }
   if (*w1l == 0) *w1l = screen_left;
   if (*w1r == kPpuXPixels - 1) *w1r = screen_right - 1;
   if (*w2l == 0) *w2l = screen_left;
